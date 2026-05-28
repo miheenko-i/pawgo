@@ -44,11 +44,11 @@ const dogPhotos = [
 ];
 const minTransferMinutes = 30;
 const fonts = {
-  regular: 'Geologica_400Regular',
-  medium: 'Geologica_500Medium',
-  semibold: 'Geologica_600SemiBold',
-  bold: 'Geologica_700Bold',
-  extraBold: 'Geologica_800ExtraBold',
+  regular: Platform.OS === 'web' ? 'Geologica, sans-serif' : 'Geologica_400Regular',
+  medium: Platform.OS === 'web' ? 'Geologica, sans-serif' : 'Geologica_500Medium',
+  semibold: Platform.OS === 'web' ? 'Geologica, sans-serif' : 'Geologica_600SemiBold',
+  bold: Platform.OS === 'web' ? 'Geologica, sans-serif' : 'Geologica_700Bold',
+  extraBold: Platform.OS === 'web' ? 'Geologica, sans-serif' : 'Geologica_800ExtraBold',
 };
 
 const serviceMeta = {
@@ -478,6 +478,7 @@ export default function App() {
     Geologica_700Bold,
     Geologica_800ExtraBold,
   });
+  const fontsReady = Platform.OS === 'web' || fontsLoaded;
   const [ready, setReady] = useState(false);
   const [data, setData] = useState(null);
   const [activeTab, setActiveTab] = useState('feed');
@@ -736,7 +737,7 @@ export default function App() {
     await refresh();
   }
 
-  if (!fontsLoaded || !ready || !data) {
+  if (!fontsReady || !ready || !data) {
     return (
       <SafeAreaView style={styles.loading}>
         <ActivityIndicator color="#176B5B" />
