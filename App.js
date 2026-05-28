@@ -61,6 +61,66 @@ const serviceMeta = {
 
 let database;
 
+function createWebDatabase() {
+  const key = 'pawgo-web-db-v1';
+  const initial = { meta: [], users: [], walkers: [], dogs: [], availability: [], posts: [], bookings: [], reviews: [], messages: [] };
+  const stored = typeof localStorage !== 'undefined' ? localStorage.getItem(key) : null;
+  const state = stored ? JSON.parse(stored) : initial;
+  const save = () => {
+    if (typeof localStorage !== 'undefined') localStorage.setItem(key, JSON.stringify(state));
+  };
+  const nextId = (table) => Math.max(0, ...state[table].map((item) => item.id || 0)) + 1;
+  const insert = (table, item) => {
+    const id = nextId(table);
+    state[table].push({ id, ...item });
+    save();
+    return { lastInsertRowId: id };
+  };
+
+  return {
+    async execAsync() {},
+    async getFirstAsync(sql, params = []) {
+      if (sql.includes('FROM meta')) return state.meta.find((item) => item.key === params[0]) || null;
+      return null;
+    },
+    async getAllAsync(sql) {
+      if (sql.startsWith('PRAGMA table_info')) return [];
+      if (sql.includes('FROM walkers') && sql.includes('JOIN users')) {
+        return [...state.walkers].map((walker) => ({ ...walker, ...state.users.find((user) => user.id === walker.user_id) })).sort((a, b) => b.rating - a.rating);
+      }
+      if (sql.includes('FROM posts') && sql.includes('JOIN dogs')) {
+        return [...state.posts].map((post) => {
+          const dog = state.dogs.find((item) => item.id === post.dog_id) || {};
+          return { ...post, dog_name: dog.name, breed: dog.breed, age: dog.age, temperament: dog.temperament, photo: dog.photo };
+        }).sort((a, b) => b.id - a.id);
+      }
+      if (sql.includes('FROM dogs')) return [...state.dogs].sort((a, b) => a.id - b.id);
+      if (sql.includes('FROM availability')) return [...state.availability].sort((a, b) => a.id - b.id);
+      if (sql.includes('FROM bookings')) return [...state.bookings].sort((a, b) => b.id - a.id);
+      if (sql.includes('FROM reviews')) return [...state.reviews].sort((a, b) => b.id - a.id);
+      if (sql.includes('FROM messages')) return [...state.messages].sort((a, b) => a.id - b.id);
+      if (sql.includes('FROM users')) return [...state.users].sort((a, b) => b.id - a.id);
+      return [];
+    },
+    async runAsync(sql, params = []) {
+      if (sql.startsWith('INSERT INTO users') && params.length === 5) return insert('users', { name: params[0], role: params[1], city: params[2], avatar: params[3], about: params[4], phone: '', phone_verified: 0, verification_code: '', partner_requested: 0, contract_status: 'none' });
+      if (sql.startsWith('INSERT INTO users') && params.length === 10) return insert('users', { name: params[0], role: params[1], city: params[2], avatar: params[3], about: params[4], phone: params[5], phone_verified: params[6], verification_code: params[7], partner_requested: params[8], contract_status: params[9] });
+      if (sql.startsWith('INSERT INTO walkers')) return insert('walkers', { user_id: params[0], rating: params[1], reviews_count: params[2], price_walk: params[3], price_taxi: params[4], tags: params[5], radius: params[6], repeat_clients: params[7] });
+      if (sql.startsWith('INSERT INTO dogs')) return insert('dogs', { owner_id: params[0], name: params[1], breed: params[2], age: params[3], temperament: params[4], photo: params[5] });
+      if (sql.startsWith('INSERT INTO availability')) return insert('availability', { walker_id: params[0], day: params[1], time: params[2], slot_type: params[3] });
+      if (sql.startsWith('INSERT INTO posts') && params.length === 7) return insert('posts', { dog_id: params[0], city: params[1], title: params[2], service_type: params[3], schedule: params[4], budget: params[5], status: params[6], address: '', notes: '', urgency: 'normal' });
+      if (sql.startsWith('INSERT INTO posts') && params.length === 10) return insert('posts', { dog_id: params[0], city: params[1], title: params[2], service_type: params[3], schedule: params[4], budget: params[5], status: params[6], address: params[7], notes: params[8], urgency: params[9] });
+      if (sql.startsWith('INSERT INTO bookings') && params.length === 6) return insert('bookings', { walker_id: params[0], dog_id: params[1], service_type: params[2], schedule: params[3], status: params[4], created_at: params[5], address: '', notes: '' });
+      if (sql.startsWith('INSERT INTO bookings') && params.length === 8) return insert('bookings', { walker_id: params[0], dog_id: params[1], service_type: params[2], schedule: params[3], status: params[4], created_at: params[5], address: params[6], notes: params[7] });
+      if (sql.startsWith('INSERT INTO reviews')) return insert('reviews', { target_type: params[0], target_id: params[1], author: params[2], rating: params[3], text: params[4] });
+      if (sql.startsWith('INSERT INTO messages')) return insert('messages', { thread: params[0], author: params[1], text: params[2], created_at: params[3] });
+      if (sql.startsWith('INSERT INTO meta')) { state.meta.push({ key: params[0], value: params[1] }); save(); return { lastInsertRowId: state.meta.length }; }
+      if (sql.startsWith('UPDATE walkers SET tags')) { const walker = state.walkers.find((item) => item.id === params[1]); if (walker) walker.tags = params[0]; save(); }
+      return { lastInsertRowId: 0 };
+    },
+  };
+}
+
 function minutesFromTime(time) {
   const [hours, minutes] = time.split(':').map(Number);
   return hours * 60 + minutes;
@@ -84,7 +144,7 @@ function findScheduleConflict(bookings, walkerId, day, time) {
 
 async function getDatabase() {
   if (!database) {
-    database = await SQLite.openDatabaseAsync('pawgo.db');
+    database = Platform.OS === 'web' ? createWebDatabase() : await SQLite.openDatabaseAsync('pawgo.db');
   }
   return database;
 }
