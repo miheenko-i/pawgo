@@ -1,5 +1,4 @@
 import { StatusBar } from 'expo-status-bar';
-import { Ionicons } from '@expo/vector-icons';
 import {
   Geologica_400Regular,
   Geologica_500Medium,
@@ -30,11 +29,11 @@ import {
 const cityOptions = ['Санкт-Петербург', 'Москва', 'Тбилиси', 'Берлин', 'Любая локация'];
 const serviceOptions = ['Разовая', 'Регулярная', 'Утро + вечер', 'Зоотакси', 'Котоняня'];
 const tabs = [
-  { id: 'feed', label: 'Поиск', icon: 'search' },
-  { id: 'calendar', label: 'Календарь', icon: 'calendar-clear-outline' },
-  { id: 'requests', label: 'Заявки', icon: 'paw-outline' },
-  { id: 'chat', label: 'Чат', icon: 'chatbubble-ellipses-outline' },
-  { id: 'profile', label: 'Профиль', icon: 'person-circle-outline' },
+  { id: 'feed', label: 'Поиск', icon: '⌕' },
+  { id: 'calendar', label: 'Календарь', icon: '□' },
+  { id: 'requests', label: 'Заявки', icon: '✦' },
+  { id: 'chat', label: 'Чат', icon: '◦' },
+  { id: 'profile', label: 'Профиль', icon: '○' },
 ];
 
 const dogPhotos = [
@@ -52,11 +51,11 @@ const fonts = {
 };
 
 const serviceMeta = {
-  Разовая: { icon: 'footsteps-outline', tint: '#F6D8BF', text: 'один выход' },
-  Регулярная: { icon: 'repeat-outline', tint: '#DDEACD', text: 'по графику' },
-  'Утро + вечер': { icon: 'partly-sunny-outline', tint: '#F8E7AE', text: 'два раза' },
-  Зоотакси: { icon: 'car-outline', tint: '#D9EAF2', text: 'поездка' },
-  Котоняня: { icon: 'home-outline', tint: '#E9D7EE', text: 'уход дома' },
+  Разовая: { icon: '··', tint: '#F6D8BF', text: 'один выход' },
+  Регулярная: { icon: '↻', tint: '#DDEACD', text: 'по графику' },
+  'Утро + вечер': { icon: '☼', tint: '#F8E7AE', text: 'два раза' },
+  Зоотакси: { icon: '▣', tint: '#D9EAF2', text: 'поездка' },
+  Котоняня: { icon: '⌂', tint: '#E9D7EE', text: 'уход дома' },
 };
 
 let database;
@@ -393,7 +392,7 @@ function ServiceTile({ label, active, onPress }) {
   return (
     <Pressable onPress={onPress} style={[styles.serviceTile, active && styles.serviceTileActive]}>
       <View style={[styles.serviceIcon, { backgroundColor: meta.tint }]}>
-        <Ionicons name={meta.icon} size={20} color="#161616" />
+        <Text style={styles.symbolIcon}>{meta.icon}</Text>
       </View>
       <Text style={styles.serviceTitle}>{label}</Text>
       <Text style={styles.serviceText}>{meta.text}</Text>
@@ -757,9 +756,9 @@ export default function App() {
             <Text style={styles.subtitle}>Санкт-Петербург и другие города</Text>
           </View>
           <Pressable onPress={() => setCityPickerOpen(true)} style={styles.dbBadge}>
-            <Ionicons name="location-outline" size={18} color="#161616" />
+            <Text style={styles.inlineIcon}>⌖</Text>
             <Text style={styles.dbBadgeText}>{city === 'Любая локация' ? 'Везде' : city.split('-')[0]}</Text>
-            <Ionicons name="chevron-down" size={15} color="#161616" />
+            <Text style={styles.chevronIcon}>⌄</Text>
           </Pressable>
         </View>
 
@@ -1064,7 +1063,7 @@ export default function App() {
                 {role === 'walker' ? (
                   <Pressable onPress={() => setPartnerRequested((value) => !value)} style={styles.checkboxRow}>
                     <View style={[styles.checkbox, partnerRequested && styles.checkboxActive]}>
-                      {partnerRequested ? <Ionicons name="checkmark" size={16} color="#161616" /> : null}
+                      {partnerRequested ? <Text style={styles.checkIcon}>✓</Text> : null}
                     </View>
                     <View style={styles.walkerMain}>
                       <Text style={styles.cardTitle}>Стать партнером Pawgo</Text>
@@ -1105,7 +1104,7 @@ export default function App() {
         <View style={[styles.tabBar, isDesktop && styles.tabBarDesktop]}>
           {tabs.map((tab) => (
             <Pressable key={tab.id} onPress={() => setActiveTab(tab.id)} style={[styles.tabItem, activeTab === tab.id && styles.tabItemActive]}>
-              <Ionicons name={tab.icon} size={22} color={activeTab === tab.id ? '#161616' : '#FFFFFF'} />
+              <Text style={[styles.tabSymbol, activeTab === tab.id && styles.tabSymbolActive]}>{tab.icon}</Text>
               <Text style={[styles.tabText, activeTab === tab.id && styles.tabTextActive]}>{tab.label}</Text>
             </Pressable>
           ))}
@@ -1116,7 +1115,7 @@ export default function App() {
               <View style={styles.cityPickerHeader}>
                 <Text style={styles.cityPickerTitle}>Локация</Text>
                 <Pressable onPress={() => setCityPickerOpen(false)} style={styles.cityPickerClose}>
-                  <Ionicons name="close" size={18} color="#161616" />
+                  <Text style={styles.closeIcon}>×</Text>
                 </Pressable>
               </View>
               {cityOptions.map((item) => (
@@ -1129,7 +1128,7 @@ export default function App() {
                   style={[styles.cityOption, city === item && styles.cityOptionActive]}
                 >
                   <Text style={[styles.cityOptionText, city === item && styles.cityOptionTextActive]}>{item}</Text>
-                  {city === item ? <Ionicons name="checkmark" size={18} color="#161616" /> : null}
+                  {city === item ? <Text style={styles.checkIcon}>✓</Text> : null}
                 </Pressable>
               ))}
             </Pressable>
@@ -4283,6 +4282,49 @@ const styles = StyleSheet.create({
     fontFamily: fonts.medium,
   },
   cityOptionTextActive: {
+    color: '#161616',
+  },
+  symbolIcon: {
+    color: '#161616',
+    fontSize: 22,
+    fontWeight: '700',
+    fontFamily: fonts.bold,
+    lineHeight: 24,
+  },
+  inlineIcon: {
+    color: '#161616',
+    fontSize: 18,
+    fontWeight: '600',
+    fontFamily: fonts.semibold,
+  },
+  chevronIcon: {
+    color: '#161616',
+    fontSize: 16,
+    fontWeight: '600',
+    fontFamily: fonts.semibold,
+    marginTop: -2,
+  },
+  checkIcon: {
+    color: '#161616',
+    fontSize: 17,
+    fontWeight: '700',
+    fontFamily: fonts.bold,
+  },
+  closeIcon: {
+    color: '#161616',
+    fontSize: 22,
+    fontWeight: '500',
+    fontFamily: fonts.medium,
+    lineHeight: 22,
+  },
+  tabSymbol: {
+    color: '#FFFFFF',
+    fontSize: 24,
+    fontWeight: '600',
+    fontFamily: fonts.semibold,
+    lineHeight: 25,
+  },
+  tabSymbolActive: {
     color: '#161616',
   },
   halfInput: {
