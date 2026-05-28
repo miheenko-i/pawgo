@@ -12,6 +12,14 @@ html = html
   .replaceAll('href="/favicon.ico"', 'href="./favicon.ico"')
   .replaceAll('src="/_expo/', 'src="./_expo/');
 
+const googleFonts = [
+  '<link rel="preconnect" href="https://fonts.googleapis.com">',
+  '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>',
+  '<link href="https://fonts.googleapis.com/css2?family=Geologica:wght@400;500;600;700;800&display=swap" rel="stylesheet">',
+].join('');
+
+html = html.replace('</head>', `${googleFonts}</head>`);
+
 fs.writeFileSync(indexPath, html);
 fs.copyFileSync(indexPath, notFoundPath);
 fs.writeFileSync(noJekyllPath, '');
